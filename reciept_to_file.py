@@ -1,4 +1,5 @@
 from unicodedata import digit
+import os
 # Функция читает файл с рецептами. Возвращает сложный словарь с содержимым файла. Аргумент функции-имя файла с рецептом
 def file_to_dict(name_file):
     with open('recipes.txt',encoding='utf-8') as fr:
@@ -47,6 +48,44 @@ def get_shop_list_by_dishes(dishes, person_count):
     return sorted_dict
 
 
+# Функция сканирует текущую директорию, выбирает в список файлы удовлетворяющие паттерну расширения напр '.txt'
+# игнорируя целевой файл заполнения , если он был создан ранее и не нулевой
+def scan_files(pattern,file_target):
+    files = []
+    file_path = os.getcwd()
+    for filename in os.listdir(file_path):
+        if filename.endswith(pattern) and (filename != file_target):
+            iter_f=os.path.join(file_path, filename)
+            files.append(iter_f)
+    return files
+
+# функция обрабатывает файлы из текущей папки , сохраняя содержимое файлов в целевом файле согласно
+# ранжированию задания.  pattern - шаблон паттерна расширения для отбора файлов (".<ext>")
+# file_target - имя файла для итогового сохранения результатов ранжирования
+def merge_files(pattern,file_target):
+    l_files=scan_files(pattern,file_target)
+    if not(len(l_files)):
+        return print('Файлов для слияния нет. Операция не выполнена')
+    sum_list = []
+    for it in l_files:
+        with open(it,encoding='utf-8') as f:
+            list1 = f.readlines()
+            list1.insert(0, str(len(list1))+'\n')
+            list1.insert(0, f.name+'\n')
+            if list1[-1][-1]!='\n':
+                list1.append('\n')
+        sum_list.append(list1)
+
+    tmp=sorted(sum_list,key=len)
+    summary_text = []
+    i=0
+    while i<len(l_files):
+        summary_text.extend(tmp[i])
+        i+=1
+    with open(file_target,'w',encoding='utf-8') as f:
+        f.writelines(summary_text)
+    return
+
 # 1 задание
 print(f'прочли из файла в словарь\n {file_to_dict("recipes.txt")}')
 
@@ -55,32 +94,4 @@ print(f'ингридиенты по блюдам\n{get_shop_list_by_dishes(["З�
 
 # 3 задание
 
-with open('1.txt',encoding='utf-8') as f:
-    list1 = f.readlines()
-    list1.insert(0, str(len(list1))+'\n')
-    list1.insert(0, f.name+'\n')
-    if list1[-1][-1]!='\n':
-        list1.append('\n')
-with open('2.txt',encoding='utf-8') as f:
-    list2 = f.readlines()
-    list2.insert(0, str(len(list2))+'\n')
-    list2.insert(0, f.name+'\n')
-    if list2[-1][-1]!='\n':
-       list2.append('\n')
-with open('3.txt', encoding='utf-8') as f:
-    list3 = f.readlines()
-    list3.insert(0, str(len(list3))+'\n')
-    list3.insert(0, f.name+'\n')
-    if list3[-1][-1]!='\n':
-        list3.append('\n')
-
-
-tmp=sorted([list1,list2,list3],key=len)
-summary_text = []
-i=0
-while i<3:
-    summary_text.extend(tmp[i])
-    i+=1
-with open('added_text.txt','w',encoding='utf-8') as f:
-    f.writelines(summary_text)
-
+merge_files(".txt",'added_text.txt')
